@@ -7,7 +7,7 @@ defmodule Todo.DatabaseWorker do
   end
 
   def store(pid, key, data) do
-    GenServer.cast(pid, {:store, key, data})
+    GenServer.call(pid, {:store, key, data})
   end
 
   def get(pid, key) do
@@ -15,16 +15,15 @@ defmodule Todo.DatabaseWorker do
   end
 
   def init(db_folder) do
-    File.mkdir_p!(db_folder)
     {:ok, %{db_folder: db_folder, content: nil}}
   end
 
-  def handle_cast({:store, key, data}, %{db_folder: db_folder} = state) do
+  def handle_call({:store, key, data}, _from, %{db_folder: db_folder} = state) do
     key
     |> file_name(db_folder)
     |> File.write!(:erlang.term_to_binary(data))
 
-    {:noreply, state}
+    {:reply, :ok, state}
   end
 
   def handle_call({:get, key}, _, %{db_folder: db_folder} = state) do
